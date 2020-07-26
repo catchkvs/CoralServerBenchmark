@@ -5,5 +5,10 @@ package io.k8scale.coral.benchmark;
  */
 public class Constants {
 
-    public static final String END_POINT = "ws://localhost:4040";
+    public static final String END_POINT = "ws://localhost:4040/broadcast";
+    public static final String AUTH_TOKEN = "1231241241234123412412341234214";
+
+    public static final String RECEIVE_SESSION_ID = "ReceiveSessionId";
+
+
 }

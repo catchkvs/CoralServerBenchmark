@@ -1,5 +1,7 @@
 package io.k8scale.coral.benchmark;
 
+import com.google.gson.Gson;
+import lombok.Data;
 import okhttp3.Response;
 import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
@@ -10,7 +12,10 @@ import org.jetbrains.annotations.Nullable;
 /**
  * Created by karmveer on 25-Jul-2020
  */
+@Data
 public class WebsocketClient extends WebSocketListener {
+    private String sessionId;
+    private Gson gson = new Gson();
     @Override
     public void onClosed(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
         super.onClosed(webSocket, code, reason);
@@ -28,7 +33,14 @@ public class WebsocketClient extends WebSocketListener {
 
     @Override
     public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
-        super.onMessage(webSocket, text);
+        ServerMessage serverMessage = gson.fromJson(text, ServerMessage.class);
+        System.out.println("Server Message: " + serverMessage);
+        switch (serverMessage.getCommand()) {
+            case Constants.RECEIVE_SESSION_ID:
+                this.sessionId = serverMessage.getSessionId();
+
+                break;
+        }
     }
 
     @Override
