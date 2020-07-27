@@ -7,6 +7,7 @@ import okio.ByteString;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Base64;
 import java.util.concurrent.TimeUnit;
 
 import static io.k8scale.coral.benchmark.Constants.*;
@@ -23,7 +24,7 @@ public class VirtualDevice extends WebSocketListener {
     private String sessionId;
     private Gson gson;
 
-    public void init() {
+    public void init(String deviceId) {
         OkHttpClient client = new OkHttpClient.Builder()
                 .readTimeout(0,  TimeUnit.MILLISECONDS)
                 .build();
@@ -31,20 +32,25 @@ public class VirtualDevice extends WebSocketListener {
                 .url(END_POINT)
                 .build();
         this.webSocket = client.newWebSocket(request, this);
+        this.deviceId = deviceId;
         this.gson = new Gson();
     }
 
     @Override
     public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
+        System.out.println("Message " + text);
         ServerMessage serverMessage = gson.fromJson(text, ServerMessage.class);
         this.messagesReceiveCount++;
         switch (serverMessage.getCommand()) {
             case RECEIVE_SESSION_ID:
                 this.sessionId = serverMessage.getSessionId();
+                DeviceSubscription deviceSubscription = new DeviceSubscription();
+                deviceSubscription.setDeviceId(deviceId);
+                deviceSubscription.setTopic("Order");
                 ClientMessage msg = new ClientMessage();
                 msg.setAuthToken(AUTH_TOKEN);
                 msg.setCommand("GetLiveUpdates");
-                msg.setData(deviceId);
+                msg.setData(Base64.getEncoder().encodeToString(gson.toJson(deviceSubscription).getBytes()));
                 msg.setSessionId(sessionId);
                 webSocket.send(gson.toJson(msg));
                 break;
@@ -55,6 +61,7 @@ public class VirtualDevice extends WebSocketListener {
 
     @Override
     public void onOpen(@NotNull WebSocket webSocket, @NotNull Response response) {
+        System.out.println("Device id: " + deviceId + " is open");
         super.onOpen(webSocket, response);
 
     }

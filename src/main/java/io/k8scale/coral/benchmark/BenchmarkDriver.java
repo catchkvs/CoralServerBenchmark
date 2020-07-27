@@ -13,15 +13,16 @@ public class BenchmarkDriver {
 
     public static void main(String args[]) {
         ExecutorService executorService = Executors.newSingleThreadExecutor();
+
+        List<VirtualDevice> devices = new ArrayList<>();
+        for(int i=0; i<5;i++) {
+            VirtualDevice device = new VirtualDevice();
+            device.init("device-" + i);
+            devices.add(device);
+        }
         FactGenerator generator = new FactGenerator();
         generator.init();
         executorService.submit(generator);
-        List<VirtualDevice> devices = new ArrayList<>();
-        for(int i=0; i<10000;i++) {
-            VirtualDevice device = new VirtualDevice();
-            device.init();
-            devices.add(device);
-        }
         try {
             Thread.sleep(300*1000);
         } catch (InterruptedException e) {

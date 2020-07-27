@@ -8,6 +8,7 @@ import okhttp3.WebSocket;
 import com.google.gson.Gson;
 
 import java.util.Base64;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -21,7 +22,7 @@ public class FactGenerator implements Runnable {
     private WebsocketClient websocketClient;
 
     public void init() {
-        this.messagesPerSecond = 10;
+        this.messagesPerSecond = 1;
         this.gson = new Gson();
         OkHttpClient client = new OkHttpClient.Builder()
                 .readTimeout(0,  TimeUnit.MILLISECONDS)
@@ -29,8 +30,14 @@ public class FactGenerator implements Runnable {
         Request request = new Request.Builder()
                 .url(Constants.END_POINT)
                 .build();
-        websocketClient = new WebsocketClient();
+        CountDownLatch latch = new CountDownLatch(1);
+        websocketClient = new WebsocketClient(latch);
         this.webSocket = client.newWebSocket(request,websocketClient);
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -47,7 +54,13 @@ public class FactGenerator implements Runnable {
 
         while(true) {
             for(int i=0; i<messagesPerSecond; i++) {
+                System.out.println("Sending message: " +clientMessage);
                 webSocket.send(gson.toJson(clientMessage));
+            }
+            try {
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
     }

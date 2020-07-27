@@ -9,6 +9,8 @@ import okio.ByteString;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.concurrent.CountDownLatch;
+
 /**
  * Created by karmveer on 25-Jul-2020
  */
@@ -16,6 +18,12 @@ import org.jetbrains.annotations.Nullable;
 public class WebsocketClient extends WebSocketListener {
     private String sessionId;
     private Gson gson = new Gson();
+    private CountDownLatch latch;
+
+    public WebsocketClient(CountDownLatch latch) {
+        this.latch = latch;
+    }
+
     @Override
     public void onClosed(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
         super.onClosed(webSocket, code, reason);
@@ -38,7 +46,7 @@ public class WebsocketClient extends WebSocketListener {
         switch (serverMessage.getCommand()) {
             case Constants.RECEIVE_SESSION_ID:
                 this.sessionId = serverMessage.getSessionId();
-
+                latch.countDown();
                 break;
         }
     }
